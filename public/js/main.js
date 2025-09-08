@@ -44,6 +44,7 @@ function updateResults(rows) {
       <td>${r.food}</td>
       <td>${r.createdOn}</td>
       <td>${r.readyInMin}</td>
+      <td><button class="delete-btn" data-id="${r.id}">Delete</button></td>
     `;
     resultsBody.appendChild(tr); // append / add to webpage
   });
