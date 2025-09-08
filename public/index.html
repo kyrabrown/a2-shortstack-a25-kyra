@@ -10,9 +10,33 @@
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   </head>
   <body>
+
+    <!-- form to input data (post) -->
     <form>
       <input type="text" id="yourname" value="your name here">
-      <button>submit</button>
+      <input type="text" id="yourdrink" value="your drink order here">
+      <input type="text" id="yourfood" value="your food order here">
+      <button id="submit-btn">submit</button>
     </form>
+
+  <!-- add table for results -->
+  <h2>All Orders (results)</h2>
+    <table>
+      <thread>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Drink</th>
+          <th>Food</th>
+          <th>Created</th>
+          <th>Prep time (min) — derived</th> <!-- derived field -->
+          <th>Delete</th> <!-- ability to delete items later -->
+        </tr>
+      </thread>
+      <tbody id="results-body"></tbody>
+    </table>
+
+    <button id="show-results">Click to update results</button>
+
   </body>
 </html>
