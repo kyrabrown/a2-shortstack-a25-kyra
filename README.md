@@ -124,3 +124,14 @@ https://www.w3schools.com/html/html_tables.asp
 https://www.w3schools.com/tags/ref_httpmethods.asp
 https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button
 https://www.w3schools.com/js/js_htmldom_eventlistener.asp
+https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListene
+https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement
+https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/tr 
+https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt - learned about prompt
+
+run instructions:
+node server.improved.js       
+
+.closest()
+
+my results func not working / being called

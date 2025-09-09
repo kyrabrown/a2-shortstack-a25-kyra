@@ -16,6 +16,7 @@ let orders = [ // like appdata, save data in dictionary
 // logic for derived field
 // function for getting derived field (prepTIme)
 function getPrepTimeInMin(drink, food) {
+  // everything's gotta take atleast a minute
   let mins = 1; // base case if they order something not accounted for 
   if (drink) {
     const d = drink.toLowerCase(); // easier to parse with all lowercase
@@ -54,6 +55,7 @@ const handleGet = function( request, response ) {
     sendFile( response, "public/index.html" )
   }
   else if (url === "results") {
+    console.log("Getting results for all orders...")
     response.writeHead(200, {"Content-Type": "application/json" }); // success code 200
     return response.end(JSON.stringify({ data: orders }));
   }
@@ -100,16 +102,61 @@ const handlePost = function( request, response ) {
       });
       // ... do something with the data here!!!
 
-      console.log(orders);
-  
+      // console.log("All Orders:  ");
+      // console.log(orders); // print all orders
+      
+      console.log( "Sucessfully added order.")
       response.writeHead( 200, "OK", {"Content-Type": "application/json" }) // return 200 success
       return response.end(JSON.stringify({ data: orders }));
       // response.end("test")
     }
-  }
-)
-response.writeHead(404, { "Content-Type": "text/plain" });
-response.end("404 Not Found");
+
+    else if (request.url === "/edit") {
+      const id = Number(payload.id); // get id (row)
+      // if (!Number.isFinite(id)) {
+      //   response.writeHead(400, { "Content-Type": "application/json" });
+      //   return response.end(JSON.stringify({ error: "id required" }));
+      // }
+      
+      console.log( "Editing order id: " + id);
+
+      // get that order id (since ids are unique)
+      orders = orders.filter(o => o.id !== id);
+
+        // update fields (if provided)
+        if (payload.yourname) order.name = payload.yourname;
+        if (payload.yourdrink) order.drink = payload.yourdrink;
+        if (payload.yourFood) order.food = payload.yourFood;
+
+        // recalc derived field
+        order.readyInMin = getPrepTimeInMin(order.drink, order.food);
+
+      console.log( "Sucessfully edited order.")
+      response.writeHead(200, { "Content-Type": "application/json" });
+      return response.end(JSON.stringify({ data: orders }));
+    }
+
+    else if (request.url === "/delete") {
+      const id = Number(payload.id); // get id (row)
+      // if (!Number.isFinite(id)) {
+      //   response.writeHead(400, { "Content-Type": "application/json" });
+      //   return response.end(JSON.stringify({ error: "id required" }));
+      // }
+      
+      console.log( "Deleting order id: " + id);
+
+      // get that order id (since ids are unique)
+      orders = orders.filter(o => o.id !== id);
+
+      console.log( "Sucessfully deleted order.")
+      response.writeHead(200, { "Content-Type": "application/json" });
+      return response.end(JSON.stringify({ data: orders }));
+    }
+
+    console.log( "Error in processing order.")
+    response.writeHead(404, { "Content-Type": "text/plain" });
+    response.end("404 Not Found");
+  })
 }
 
 const sendFile = function( response, filename ) {
@@ -129,7 +176,6 @@ const sendFile = function( response, filename ) {
        // file not found, error code 404
        response.writeHeader( 404 )
        response.end( "404 Error: File Not Found" )
-
      }
    })
 }

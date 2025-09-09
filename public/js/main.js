@@ -44,6 +44,7 @@ function updateResults(rows) {
       <td>${r.food}</td>
       <td>${r.createdOn}</td>
       <td>${r.readyInMin}</td>
+      <td><button class="edit-btn" data-id="${r.id}">Edit</button></td>
       <td><button class="delete-btn" data-id="${r.id}">Delete</button></td>
     `;
     resultsBody.appendChild(tr); // append / add to webpage
@@ -53,16 +54,31 @@ function updateResults(rows) {
 // function to get results
 const getResults = async function() {
   console.log("getting results..") // awaits response and prints it 
-  // stop form submission from trying to load
-  // a new .html page for displaying results...
-  // this was the original browser behavior and still
-  // remains to this day
-  // const results = await fetch ( "/results" );
+
   const results = await fetch( "/results");
 
   const info = await results.json();
   updateResults(info.data); // get the .data of teh info (results converted to json)
   console.log( "data:", info ) // awaits response and prints it 
+}
+
+// function to get results
+const editOrder = async function(event) {
+  console.log("Editing order..") // awaits response and prints it 
+
+  event.preventDefault()
+
+  const response = await fetch( "/edit", { // the request URL that will show up on server
+    // code can explicitly look for this /submit
+    // headers: { "Content-Type": "application/json" }, // add header since using json info
+    method:"POST",
+    body 
+  })
+
+  const text = await response.text()
+  console.log( "text:", text ) // awaits response and prints it 
+
+  updateResults(info.data); // get the .data of teh info (results converted to json)
 }
 
 window.onload = function() {
@@ -73,4 +89,70 @@ window.onload = function() {
   const resultsButton = document.querySelector("#show-results");
   resultsButton.onclick = getResults;
   
+  // delete button in table click handler, add it to results body (where button resides)
+  const res = document.getElementById("results-body");
+  if (res) {
+    res.addEventListener("click", async (e) => {
+      const deleteBtn = e.target.closest(".delete-btn"); // get closeset delete button
+      const editBtn = e.target.closest(".edit-btn"); // get edit delete button
+      
+      // Clicked neither? Bail.
+      if (!deleteBtn && !editBtn) return;
+
+      // delete
+      if (deleteBtn) {
+        // get id (that specific row in the table for that order)
+        const id = Number(deleteBtn.dataset.id); // (in data-id)
+        console.log("Deleting oreder id: " + id);
+        if (!Number.isFinite(id)) return;
+      
+        // Ask the server to delete this row, then redraw
+        const results = await fetch("/delete", { // need to add this to handlePost
+          method: "POST", // just make it a post request (not DELETE for simplicity)
+          // headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }) // send id as a string
+        });
+      
+        const info = await results.json();
+        updateResults(info.data); // get the .data of teh info (results converted to json)
+        console.log( "data:", info ) // awaits response and prints it 
+      }
+
+      // edit
+      if (editBtn) {
+        const id = Number(editBtn.dataset.id); // (in data-id)
+        console.log("Editng oreder id: " + id);
+        if (!Number.isFinite(id)) return;
+
+        // get closest table row to button
+        const tr = editBtn.closest("tr");
+        const currentName  = tr.children[1].textContent;
+        const currentDrink = tr.children[2].textContent;
+        const currentFood  = tr.children[3].textContent;
+
+        const newName  = prompt("Edit name:",  currentName);
+        if (newName === null) return; // user decided not to order this
+        const newDrink = prompt("Edit drink:", currentDrink);
+        if (newDrink === null) return;
+        const newFood  = prompt("Edit food:",  currentFood);
+        if (newFood === null) return;
+
+        const res = await fetch("/edit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id,
+            yourname: newName,
+            yourdrink: newDrink,
+            yourFood: newFood
+          })
+        });    
+        const info = await res.json();
+        updateResults(info.data); // get the .data of teh info (results converted to json)
+        console.log( "data:", info ) // awaits response and prints it 
+      }
+
+    });
+  }
 }
+
