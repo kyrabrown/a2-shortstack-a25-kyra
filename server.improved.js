@@ -121,7 +121,10 @@ const handlePost = function( request, response ) {
       console.log( "Editing order id: " + id);
 
       // get that order id (since ids are unique)
-      orders = orders.filter(o => o.id !== id);
+      const order = orders.find(o => o.id === id);
+      if (!order) {
+        return response.end(JSON.stringify({ error: "order not found" }));
+      }
 
         // update fields (if provided)
         if (payload.yourname) order.name = payload.yourname;
@@ -145,7 +148,7 @@ const handlePost = function( request, response ) {
       
       console.log( "Deleting order id: " + id);
 
-      // get that order id (since ids are unique)
+      // filter out that order id row (since ids are unique)
       orders = orders.filter(o => o.id !== id);
 
       console.log( "Sucessfully deleted order.")
