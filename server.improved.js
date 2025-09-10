@@ -104,7 +104,6 @@ const handlePost = function( request, response ) {
 
       // console.log("All Orders:  ");
       // console.log(orders); // print all orders
-      
       console.log( "Sucessfully added order.")
       response.writeHead( 200, "OK", {"Content-Type": "application/json" }) // return 200 success
       return response.end(JSON.stringify({ data: orders }));

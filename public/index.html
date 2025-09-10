@@ -5,39 +5,83 @@
     <meta charset="utf-8">
     <script src="js/main.js"></script>
     <link rel="stylesheet" href="css/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Handlee&family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Handlee&family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Pacifico&display=swap" rel="stylesheet">
     
     <!-- get rid of favicon error -->
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   </head>
   <body>
+    <h1>
+      Welcome to our Coffee Shop! ☕️
+    </h1>
+    <h2>
+        Our Fall Menu 🍂
+    </h2>
 
-    <!-- form to input data (post) -->
-    <form>
-      <input type="text" id="yourname" value="your name here">
-      <input type="text" id="yourdrink" value="your drink order here">
-      <input type="text" id="yourfood" value="your food order here">
-      <button id="submit-btn">submit</button>
-    </form>
+    <div class="menu">
+      <div class="borderbox">
+        <h3>Drinks</h3>
+        <ul>
+          <li>☕ Latte</li>
+          <li>🍵 Tea</li>
+          <li>🧊 Iced Coffee</li>
+          <li>🧊 Hot Coffee</li>
+          <li>🍫 Hot Chocolate</li>
+          <li>🥤 Frappuccino</li>
+          <li>🍓 Refresher</li>
+        </ul>
+      </div>
+      <div class="borderbox">
+        <h3>Food</h3>
+        <ul>
+          <li>🥯 Bagel</li>
+          <li>🥪 Sandwich</li>
+          <li>🍰 Cake</li>
+          <li>🥐 Pastry</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="borderbox">
+      <h2>
+        Order here:
+      </h2>
+      <!-- form to input data (post) -->
+      <form>
+        <input type="text" id="yourname" placeholder="your name">
+        <input type="text" id="yourdrink" placeholder="your drink order">
+        <input type="text" id="yourfood" placeholder="your food order">
+        <button id="submit-btn">submit</button>
+      </form>
+    </div>
 
   <!-- add table for results -->
-  <h2>All Orders (results)</h2>
-    <table>
-      <thread>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Drink</th>
-          <th>Food</th>
-          <th>Created</th>
-          <th>Order Prep time (min)</th> <!-- derived field -->
-          <th>Delete</th> <!-- ability to delete items later -->
-        </tr>
-      </thread>
-      <tbody id="results-body"></tbody>
-    </table>
-
-    <!-- to see updated table of results -->
-    <button id="show-results">Click to update results</button>
+  <div class="borderbox-results">
+    <h2>All Orders (results)</h2>
+      <table>
+        <thread>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Drink</th>
+            <th>Food</th>
+            <th>Created</th>
+            <th>Order Prep time (min)</th> <!-- derived field -->
+            <th>Delete</th> <!-- ability to delete items later -->
+          </tr>
+        </thread>
+        <tbody id="results-body"></tbody>
+      </table>
+  
+      <!-- to see updated table of results -->
+      <button id="show-results">Click to update results</button>
+  </div>
 
   </body>
 </html>

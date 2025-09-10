@@ -117,6 +117,10 @@ Include a very brief summary of your project here. Be sure to include the CSS po
 
 
 sources:
+
+https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms
+
+
 https://www.w3schools.com/tags/tag_table.asp
 https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/tbody 
 https://www.w3schools.com/jsref/prop_html_innerhtml.asp 
@@ -128,6 +132,10 @@ https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListene
 https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement
 https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/tr 
 https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt - learned about prompt
+https://www.w3schools.com/html/html_css.asp
+https://www.w3schools.com/cssref/pr_border.php
+https://www.w3schools.com/cssref/pr_class_display.php
+https://www.w3schools.com/w3css/w3css_containers.asp
 
 run instructions:
 node server.improved.js       
@@ -135,3 +143,5 @@ node server.improved.js
 .closest()
 
 my results func not working / being called
+like what padding is
+the difference between flex and grid
