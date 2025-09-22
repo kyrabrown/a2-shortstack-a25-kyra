@@ -4,9 +4,14 @@
   "description": "",
   "author": "",
   "scripts": {
-    "start": "node server.improved.js"
+    "start": "node --env-file=.env server.improved.js"
   },
   "dependencies": {
-    "mime": "^2.6.0"
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "mime": "^2.6.0",
+    "mongodb": "^6.20.0"
   }
 }

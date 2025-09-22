@@ -24,6 +24,7 @@ const submit = async function( event ) {
     // code can explicitly look for this /submit
     // headers: { "Content-Type": "application/json" }, // add header since using json info
     method:"POST",
+    headers: { "Content-Type": "application/json" },
     body 
   })
 
@@ -72,6 +73,7 @@ const editOrder = async function(event) {
     // code can explicitly look for this /submit
     // headers: { "Content-Type": "application/json" }, // add header since using json info
     method:"POST",
+    headers: { "Content-Type": "application/json" },
     body 
   })
 
@@ -109,7 +111,7 @@ window.onload = function() {
         // Ask the server to delete this row, then redraw
         const results = await fetch("/delete", { // need to add this to handlePost
           method: "POST", // just make it a post request (not DELETE for simplicity)
-          // headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id }) // send id as a string
         });
       
@@ -155,4 +157,40 @@ window.onload = function() {
     });
   }
 }
+
+// for authentication sign in
+async function checkAuth() {
+  const res = await fetch("/auth/me");
+  const me = await res.json();
+  const authed = me.authenticated;
+  document.getElementById("auth").style.display = authed ? "none" : "block";
+  document.getElementById("app").style.display  = authed ? "block" : "none";
+  if (authed) await getResults();
+}
+
+document.getElementById("login-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const username = document.getElementById("login-username").value.trim();
+  const password = document.getElementById("login-password").value;
+
+  const res = await fetch("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+
+  const data = await res.json();
+  document.getElementById("login-msg").textContent =
+    data.error || (data.created ? "Account created!" : "Logged in!");
+
+  await checkAuth();
+});
+
+document.getElementById("logout").addEventListener("click", async () => {
+  await fetch("/auth/logout", { method: "POST" });
+  await checkAuth();
+});
+
+window.addEventListener("load", checkAuth);
+
 

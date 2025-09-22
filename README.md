@@ -21,6 +21,8 @@ The app maintains a dataset of orders in memory and automatically adds a **deriv
    `npm install`
 3. Start the server:  
   `node server.improved.js`
+  or
+  `npm start`
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---

@@ -1,20 +1,87 @@
-const http = require( "http" ),
-      fs   = require( "fs" ),
-      // IMPORTANT: you must run `npm install` in the directory for this assignment
-      // to install the mime library if you"re testing this on your local machine.
-      // However, Glitch will install it automatically by looking in your package.json
-      // file.
-      mime = require( "mime" ),
-      dir  = "public/",
-      port = 3000
+require('dotenv').config();
 
-let nextId = 1; // will start at 1 and go up
-let orders = [ // like appdata, save data in dictionary
-  // { "yourname": "kyra", "yourdrink": latte, "yourfood": croissant },
-];
+const express    = require('express'),
+      app        = express(),
+      dir  = "public/"
 
-// logic for derived field
-// function for getting derived field (prepTIme)
+const port       = 3000
+
+const session = require("express-session");
+const bcrypt = require("bcrypt");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb")
+
+// add these globals so routes can use them after connect()
+let client;
+let db;
+
+// create collections
+let Users;
+let Orders;
+
+// let nextId = 1; // will start at 1 and go up
+// let orders = [ // like appdata, save data in dictionary
+//   // { "yourname": "kyra", "yourdrink": latte, "yourfood": croissant },
+// ];
+
+// middleware //
+app.use( express.static( 'public' ) ) // serve static files from public/
+app.use( express.static( 'views'  ) )
+app.use(express.json());
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { httpOnly: true} // 8 hours
+  })
+);
+
+// Allows us to handle JSON in certain ways on the server side
+// If JSON is sent by the client, just tack it on to the request body
+// Allows us to do req.body.newdream farther down
+// Only want to use it for JSON data
+
+
+
+// MongoDB connection setup
+// const { MongoClient, ServerApiVersion } = require('mongodb');
+const uri = `mongodb+srv://${process.env.USERNAME}:${process.env.PASSWORD}@${process.env.HOST}/?retryWrites=true&w=majority&appName=ClusterA3`;
+// const uri0 = `mongodb+srv://ss${process.env.USERNM}:${process.env.PASS}@${proce.env.HOST}/?retryWrites=true&w=majority&appName=Cluster0`;
+//console.log(uri);
+
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
+
+async function run() {
+// 
+    // Connect the client to the server	(optional starting in v4.7)
+    await client.connect();
+    // Send a ping to confirm a successful connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
+    const dbName = process.env.MONGO_DB || 'a3';
+    db = client.db(dbName); 
+
+    Users = db.collection('users');
+    Orders = db.collection('orders');
+    await Users.createIndex({ username: 1 }, { unique: true });
+    console.log("Created orders and users collection");
+  // } finally {
+  //   // Ensures that the client will close when you finish/error
+  //   await client.close();
+  // }
+}
+run().catch(console.dir);
+
+// logic for derived field (prep time in minutes)
 function getPrepTimeInMin(drink, food) {
   // everything's gotta take atleast a minute
   let mins = 1; // base case if they order something not accounted for 
@@ -24,7 +91,7 @@ function getPrepTimeInMin(drink, food) {
     else if (d.includes("hot")) mins += 2;
     else if (d.includes("cold")) mins += 1;
     else if (d.includes("refresher")) mins += 4;
-    else if (d.includes("frapp")) mins += 5;
+    else if (d.includes("frap")) mins += 5;
   }
   if (food) {
     const f = food.toLowerCase();
@@ -36,150 +103,99 @@ function getPrepTimeInMin(drink, food) {
   return mins;
 }
 
-
-const server = http.createServer( function( request,response ) {
-  if( request.method === "GET" ) {
-    handleGet( request, response )    
-  }else if( request.method === "POST" ){ // have post request
-    handlePost( request, response ) 
-  }
-})
-
-const handleGet = function( request, response ) {
-  const filename = dir + request.url.slice( 1 ) 
-
-  // **just an idea of what you CAN do
-  let url = request.url.slice( 1 );
-
-  if( request.url === "/" ) {
-    sendFile( response, "public/index.html" )
-  }
-  else if (url === "results") {
-    console.log("Getting results for all orders...")
-    response.writeHead(200, {"Content-Type": "application/json" }); // success code 200
-    return response.end(JSON.stringify({ data: orders }));
-  }
-  else{
-    sendFile( response, filename )
-  }
+// helper functions for log in
+function requireAuth(req, res, next) {
+  if (!req.session.userId) return res.status(401).json({ error: 'not authenticated' });
+  next();
 }
 
-const handlePost = function( request, response ) {
-  let dataString = ""
+// POST /auth/login  { username, password }
+// Create account if missing (allowed by A3). Hash passwords!
+app.post('/auth/login', async (req, res) => {
+  const { username = '', password = '' } = req.body || {};
+  const u = username.trim();
+  if (!u || !password) return res.status(400).json({ error: 'username and password required' });
 
-  request.on( "data", function( data ) { // take in data and read as packets
-      dataString += data 
-  })
+  let user = await Users.findOne({ username: u });
+  if (!user) {
+    const passwordHash = await bcrypt.hash(password, 10);
+    const result = await Users.insertOne({ username: u, passwordHash, createdAt: new Date() });
+    req.session.userId = result.insertedId.toString();
+    console.log("Created new user", u);
+    return res.json({ ok: true, created: true, username: u });
+  }
 
-  request.on( "end", function() { // wait until get all chunks to write to console
-      let payload = {};
-      try {
-        payload = dataString ? JSON.parse(dataString) : {};
-      } catch {
-        response.writeHead(400, {"Content-Type": "application/json" });
-        return response.end(JSON.stringify({ error: "Invalid JSON" }));
-      }
-      // print payload
-      console.log( payload );
+  const ok = await bcrypt.compare(password, user.passwordHash);
+  if (!ok) return res.status(401).json({ error: 'invalid credentials' });
 
-      if (request.url === "/submit") {
-      const name  = (payload.yourname  || "").toString().trim();
-      const drink = (payload.yourdrink || "").toString().trim();
-      const food  = (payload.yourFood  || payload.yourfood || "").toString().trim();
+  req.session.userId = user._id.toString();
+  res.json({ ok: true, created: false, username: u });
+  console.log("User logged in:", u);
+});
 
-      console.log( "Saving information to table.. ")
+app.get('/auth/me', (req, res) => {
+  res.json({ authenticated: !!req.session.userId, userId: req.session.userId || null });
+});
 
-      const createdOn = new Date().toISOString(); // use today's date
-      const readyInMin = getPrepTimeInMin(drink, food);
+app.post('/auth/logout', (req, res) => {
+  req.session.destroy(() => res.json({ ok: true }));
+});
 
-      orders.push({
-        id: nextId++,
-        name,
-        drink,
-        food,
-        createdOn,
-        readyInMin
-      });
-      // ... do something with the data here!!!
+// routes for express //
+// GET all orders
+app.get('/results', async (req, res) => {
+  const all = await Orders.find({}).sort({ _id: 1 }).toArray();
+  res.json({ data: all });
+});
 
-      // console.log("All Orders:  ");
-      // console.log(orders); // print all orders
-      console.log( "Sucessfully added order.")
-      response.writeHead( 200, "OK", {"Content-Type": "application/json" }) // return 200 success
-      return response.end(JSON.stringify({ data: orders }));
-      // response.end("test")
-    }
+// POST new order
+app.post('/submit', async (req, res) => {
+  const { yourname = '', yourdrink = '', yourFood = '' } = req.body || {};
+  const doc = {
+    name: yourname.trim(),
+    drink: yourdrink.trim(),
+    food: yourFood.trim(),
+    createdOn: new Date().toISOString(),
+    readyInMin: getPrepTimeInMin(yourdrink, yourFood)
+  };
+  await Orders.insertOne(doc);
+  const all = await Orders.find({}).sort({ _id: 1 }).toArray();
+  res.json({ data: all });
+});
 
-    else if (request.url === "/edit") {
-      const id = Number(payload.id); // get id (row)
-      // if (!Number.isFinite(id)) {
-      //   response.writeHead(400, { "Content-Type": "application/json" });
-      //   return response.end(JSON.stringify({ error: "id required" }));
-      // }
-      
-      console.log( "Editing order id: " + id);
+// POST edit { id, yourname?, yourdrink?, yourFood? }
+app.post('/edit', async (req, res) => {
+  const { id, yourname, yourdrink, yourFood } = req.body || {};
+  if (!id) return res.status(400).json({ error: 'id required' });
 
-      // get that order id (since ids are unique)
-      const order = orders.find(o => o.id === id);
-      if (!order) {
-        return response.end(JSON.stringify({ error: "order not found" }));
-      }
+  const _id = new ObjectId(id);
+  const existing = await Orders.findOne({ _id });
+  if (!existing) return res.status(404).json({ error: 'order not found' });
 
-        // update fields (if provided)
-        if (payload.yourname) order.name = payload.yourname;
-        if (payload.yourdrink) order.drink = payload.yourdrink;
-        if (payload.yourFood) order.food = payload.yourFood;
+  const updated = {
+    name:  typeof yourname  === 'string' ? yourname.trim()  : existing.name,
+    drink: typeof yourdrink === 'string' ? yourdrink.trim() : existing.drink,
+    food:  typeof yourFood  === 'string' ? yourFood.trim()  : existing.food
+  };
+  updated.readyInMin = getPrepTimeInMin(updated.drink, updated.food);
 
-        // recalc derived field
-        order.readyInMin = getPrepTimeInMin(order.drink, order.food);
+  await Orders.updateOne({ _id }, { $set: updated });
+  const all = await Orders.find({}).sort({ _id: 1 }).toArray();
+  res.json({ data: all });
+});
 
-      console.log( "Sucessfully edited order.")
-      response.writeHead(200, { "Content-Type": "application/json" });
-      return response.end(JSON.stringify({ data: orders }));
-    }
+// POST delete { id }
+app.post('/delete', async (req, res) => {
+  const { id } = req.body || {};
+  if (!id) return res.status(400).json({ error: 'id required' });
+  await Orders.deleteOne({ _id: new ObjectId(id) });
+  const all = await Orders.find({}).sort({ _id: 1 }).toArray();
+  res.json({ data: all });
+});
 
-    else if (request.url === "/delete") {
-      const id = Number(payload.id); // get id (row)
-      // if (!Number.isFinite(id)) {
-      //   response.writeHead(400, { "Content-Type": "application/json" });
-      //   return response.end(JSON.stringify({ error: "id required" }));
-      // }
-      
-      console.log( "Deleting order id: " + id);
+// 404 fallback for unknown routes
+// app.use((req, res) => {
+//   res.status(404).type("text").send("404 Not Found");
+// });
 
-      // filter out that order id row (since ids are unique)
-      orders = orders.filter(o => o.id !== id);
-
-      console.log( "Sucessfully deleted order.")
-      response.writeHead(200, { "Content-Type": "application/json" });
-      return response.end(JSON.stringify({ data: orders }));
-    }
-
-    console.log( "Error in processing order.")
-    response.writeHead(404, { "Content-Type": "text/plain" });
-    response.end("404 Not Found");
-  })
-}
-
-const sendFile = function( response, filename ) {
-   const type = mime.getType( filename ) 
-
-   fs.readFile( filename, function( err, content ) {
-
-     // if the error = null, then we"ve loaded the file successfully
-     if( err === null ) {
-
-       // status code: https://httpstatuses.com
-       response.writeHeader( 200, { "Content-Type": type })
-       response.end( content )
-
-     }else{
-
-       // file not found, error code 404
-       response.writeHeader( 404 )
-       response.end( "404 Error: File Not Found" )
-     }
-   })
-}
-
-server.listen( process.env.PORT || port )
+app.listen( process.env.PORT || port )
