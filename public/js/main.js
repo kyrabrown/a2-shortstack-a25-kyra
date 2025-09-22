@@ -1,196 +1,194 @@
 // FRONT-END (CLIENT) JAVASCRIPT HERE
 
-const submit = async function( event ) {
-  console.log("submitting data..") 
-  // stop form submission from trying to load
-  // a new .html page for displaying results...
-  // this was the original browser behavior and still
-  // remains to this day
-  event.preventDefault()
+// ---- helpers ----
+const byId = (id) => document.getElementById(id);
+const esc = (s) =>
+  String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  const nameInput = document.querySelector( "#yourname" ),
-    drinkInput = document.querySelector( "#yourdrink" ),
-    foodInput = document.querySelector( "#yourfood" );
-
-  const json = {
-    yourname:  nameInput.value,
-    yourdrink: drinkInput.value,
-    yourFood:  foodInput.value
-  };
-
-  const body = JSON.stringify( json );
-  
-  const response = await fetch( "/submit", { // the request URL that will show up on server
-    // code can explicitly look for this /submit
-    // headers: { "Content-Type": "application/json" }, // add header since using json info
-    method:"POST",
-    headers: { "Content-Type": "application/json" },
-    body 
-  })
-
-  const text = await response.text()
-  console.log( "text:", text ) // awaits response and prints it 
+// Normalize Mongo _id to a string for UI/data-id
+function getId(doc) {
+  const v = doc && doc._id;
+  if (!v) return '';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'object') return v.$oid || v.toString?.() || '';
+  return String(v);
 }
 
-// helper function to show results on webpage screen
-function updateResults(rows) {
-  const resultsBody = document.getElementById("results-body"); // get results table using id
-  resultsBody.innerHTML = ""; // clear exisitng rows
-  rows.forEach(r => { // loop through each object
+// ---- render table ----
+function updateResults(rows = []) {
+  const resultsBody = byId("results-body");
+  if (!resultsBody) return;
+  resultsBody.innerHTML = "";
+  rows.forEach(r => {
+    const id = getId(r);
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${r.id}</td> 
-      <td>${r.name}</td>
-      <td>${r.drink}</td>
-      <td>${r.food}</td>
-      <td>${r.createdOn}</td>
-      <td>${r.readyInMin}</td>
-      <td><button class="edit-btn" data-id="${r.id}">Edit</button></td>
-      <td><button class="delete-btn" data-id="${r.id}">Delete</button></td>
+      <td>${esc(id)}</td> 
+      <td>${esc(r.name)}</td>
+      <td>${esc(r.drink)}</td>
+      <td>${esc(r.food)}</td>
+      <td>${esc(r.createdOn)}</td>
+      <td>${esc(r.readyInMin)}</td>
+      <td>
+        <button class="edit-btn" data-id="${esc(id)}">Edit</button>
+        <button class="delete-btn" data-id="${esc(id)}">Delete</button>
+      </td>
     `;
-    resultsBody.appendChild(tr); // append / add to webpage
+    resultsBody.appendChild(tr);
   });
 }
 
-// function to get results
-const getResults = async function() {
-  console.log("getting results..") // awaits response and prints it 
-
-  const results = await fetch( "/results");
-
-  const info = await results.json();
-  updateResults(info.data); // get the .data of teh info (results converted to json)
-  console.log( "data:", info ) // awaits response and prints it 
+// ---- show/hide login vs app ----
+function showApp(loggedIn) {
+  const login = byId("login-section"); // matches index.html
+  const app   = byId("app");  // matches index.html
+  if (!login || !app) return;
+  login.hidden = !!loggedIn;
+  app.hidden   = !loggedIn;
 }
 
-// function to get results
-const editOrder = async function(event) {
-  console.log("Editing order..") // awaits response and prints it 
+// ---- API calls ----
+const submit = async (event) => {
+  event.preventDefault();
+  console.log("submitting data..");
 
-  event.preventDefault()
+  const nameInput  = byId("yourname");
+  const drinkInput = byId("yourdrink");
+  const foodInput  = byId("yourfood");
 
-  const response = await fetch( "/edit", { // the request URL that will show up on server
-    // code can explicitly look for this /submit
-    // headers: { "Content-Type": "application/json" }, // add header since using json info
-    method:"POST",
+  const payload = {
+    yourname:  nameInput?.value || "",
+    yourdrink: drinkInput?.value || "",
+    yourFood:  foodInput?.value || "", // capital F matches server
+  };
+
+  const res = await fetch("/submit", {
+    method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body 
-  })
+    body: JSON.stringify(payload),
+  });
 
-  const text = await response.text()
-  console.log( "text:", text ) // awaits response and prints it 
+  if (res.status === 401) { await checkAuth(); return; }
+  const data = await res.json();
+  updateResults(data.data);
+  console.log("submit ->", data);
+};
 
-  updateResults(info.data); // get the .data of teh info (results converted to json)
-}
+const getResults = async () => {
+  console.log("getting results..");
+  const res = await fetch("/results", { credentials: "same-origin" });
+  if (res.status === 401) { await checkAuth(); return; }
+  const info = await res.json();
+  updateResults(info.data);
+  console.log("data:", info);
+};
 
-window.onload = function() {
-  const button = document.querySelector("#submit-btn");
-  button.onclick = submit;
+// ---- table actions (edit/delete) via delegation ----
+async function onResultsTableClick(e) {
+  const deleteBtn = e.target.closest(".delete-btn");
+  const editBtn   = e.target.closest(".edit-btn");
+  if (!deleteBtn && !editBtn) return;
 
-  // reuslts button
-  const resultsButton = document.querySelector("#show-results");
-  resultsButton.onclick = getResults;
-  
-  // delete button in table click handler, add it to results body (where button resides)
-  const res = document.getElementById("results-body");
-  if (res) {
-    res.addEventListener("click", async (e) => {
-      const deleteBtn = e.target.closest(".delete-btn"); // get closeset delete button
-      const editBtn = e.target.closest(".edit-btn"); // get edit delete button
-      
-      // Clicked neither? Bail.
-      if (!deleteBtn && !editBtn) return;
+  // DELETE
+  if (deleteBtn) {
+    const id = deleteBtn.dataset.id; // keep as string for ObjectId
+    if (!id) return;
+    console.log("Deleting order id:", id);
 
-      // delete
-      if (deleteBtn) {
-        // get id (that specific row in the table for that order)
-        const id = Number(deleteBtn.dataset.id); // (in data-id)
-        console.log("Deleting oreder id: " + id);
-        if (!Number.isFinite(id)) return;
-      
-        // Ask the server to delete this row, then redraw
-        const results = await fetch("/delete", { // need to add this to handlePost
-          method: "POST", // just make it a post request (not DELETE for simplicity)
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id }) // send id as a string
-        });
-      
-        const info = await results.json();
-        updateResults(info.data); // get the .data of teh info (results converted to json)
-        console.log( "data:", info ) // awaits response and prints it 
-      }
-
-      // edit
-      if (editBtn) {
-        const id = Number(editBtn.dataset.id); // (in data-id)
-        console.log("Editng oreder id: " + id);
-        if (!Number.isFinite(id)) return;
-
-        // get closest table row to button
-        const tr = editBtn.closest("tr");
-        const currentName  = tr.children[1].textContent;
-        const currentDrink = tr.children[2].textContent;
-        const currentFood  = tr.children[3].textContent;
-
-        const newName  = prompt("Edit name:",  currentName);
-        if (newName === null) return; // user decided not to order this
-        const newDrink = prompt("Edit drink:", currentDrink);
-        if (newDrink === null) return;
-        const newFood  = prompt("Edit food:",  currentFood);
-        if (newFood === null) return;
-
-        const res = await fetch("/edit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id,
-            yourname: newName,
-            yourdrink: newDrink,
-            yourFood: newFood
-          })
-        });    
-        const info = await res.json();
-        updateResults(info.data); // get the .data of teh info (results converted to json)
-        console.log( "data:", info ) // awaits response and prints it 
-      }
-
+    const res = await fetch("/delete", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
     });
+
+    if (res.status === 401) { await checkAuth(); return; }
+    const info = await res.json();
+    updateResults(info.data);
+    console.log("delete ->", info);
+    return;
+  }
+
+  // EDIT
+  if (editBtn) {
+    const id = editBtn.dataset.id; // keep as string
+    if (!id) return;
+    console.log("Editing order id:", id);
+
+    const tr = editBtn.closest("tr");
+    const currentName  = tr.children[1].textContent;
+    const currentDrink = tr.children[2].textContent;
+    const currentFood  = tr.children[3].textContent;
+
+    const newName  = prompt("Edit name:",  currentName);
+    if (newName === null) return;
+    const newDrink = prompt("Edit drink:", currentDrink);
+    if (newDrink === null) return;
+    const newFood  = prompt("Edit food:",  currentFood);
+    if (newFood === null) return;
+
+    const res = await fetch("/edit", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id,
+        yourname:  newName,
+        yourdrink: newDrink,
+        yourFood:  newFood,
+      }),
+    });
+
+    if (res.status === 401) { await checkAuth(); return; }
+    const info = await res.json();
+    updateResults(info.data);
+    console.log("edit ->", info);
   }
 }
 
-// for authentication sign in
+// ---- auth ----
 async function checkAuth() {
-  const res = await fetch("/auth/me");
+  const res = await fetch("/auth/me", { credentials: 'same-origin' });
   const me = await res.json();
-  const authed = me.authenticated;
-  document.getElementById("auth").style.display = authed ? "none" : "block";
-  document.getElementById("app").style.display  = authed ? "block" : "none";
+  const authed = !!me.authenticated;
+  showApp(authed);
   if (authed) await getResults();
 }
 
-document.getElementById("login-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const username = document.getElementById("login-username").value.trim();
-  const password = document.getElementById("login-password").value;
+// ---- wire everything AFTER DOM is ready ----
+window.addEventListener("DOMContentLoaded", () => {
+  byId("submit-btn")   ?.addEventListener("click", submit);
+  byId("show-results") ?.addEventListener("click", getResults);
+  byId("results-body") ?.addEventListener("click", onResultsTableClick);
 
-  const res = await fetch("/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password })
+  byId("login-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = byId("login-username")?.value.trim() || "";
+    const password = byId("login-password")?.value || "";
+    if (!username || !password) {
+      byId("login-msg") && (byId("login-msg").textContent = "Username and password required");
+      return;
+    }
+
+    const res = await fetch("/auth/login", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+
+    const data = await res.json();
+    byId("login-msg") && (byId("login-msg").textContent =
+      data.error || (data.created ? "Account created!" : "Logged in!"));
+
+    await checkAuth();
   });
 
-  const data = await res.json();
-  document.getElementById("login-msg").textContent =
-    data.error || (data.created ? "Account created!" : "Logged in!");
+  byId("logout")?.addEventListener("click", async () => {
+    await fetch("/auth/logout", { method: "POST", credentials: "same-origin" });
+    await checkAuth();
+  });
 
-  await checkAuth();
+  checkAuth();
 });
-
-document.getElementById("logout").addEventListener("click", async () => {
-  await fetch("/auth/logout", { method: "POST" });
-  await checkAuth();
-});
-
-window.addEventListener("load", checkAuth);
-
-

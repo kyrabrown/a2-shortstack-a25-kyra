@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- where metadata goes -->
     <title>CS4241 Assignment 2</title>
     <meta charset="utf-8">
-    <script src="js/main.js"></script>
     <link rel="stylesheet" href="css/main.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,22 +12,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Handlee&family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Pacifico&display=swap" rel="stylesheet">
-    
-
-    <section id="auth">
-    <h3>Login</h3>
-    <form id="login-form">
-      <input id="login-username" placeholder="username" required>
-      <input id="login-password" type="password" placeholder="password" required>
-      <button type="submit">Log in / Create account</button>
-    </form>
-    <p id="login-msg"></p>
-  </section>
-
-  <section id="app">
-    <!-- your existing order form + results table -->
-    <button id="logout">Logout</button>
-  </section>
 
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   </head>
@@ -35,68 +19,86 @@
     <h1>
       Welcome to our Coffee Shop! ☕️
     </h1>
-    <h2>
-        Our Fall Menu 🍂
-    </h2>
 
-    <div class="menu">
-      <div class="borderbox">
-        <h3>Drinks</h3>
-        <ul>
-          <li>☕ Latte</li>
-          <li>🍵 Tea</li>
-          <li>🧊 Iced Coffee</li>
-          <li>☕ Hot Coffee</li>
-          <li>🍫 Hot Chocolate</li>
-          <li>🥤 Frappuccino</li>
-          <li>🍓 Refresher</li>
-        </ul>
+    <section id="login-section">
+    <h3>Please login to place an order!</h3>
+    <form id="login-form">
+      <input id="login-username" placeholder="username" required>
+      <input id="login-password" type="password" placeholder="password" required>
+      <button type="submit">Log in / Create account</button>
+      </form>
+      <p id="login-msg"></p>
+    </section>
+
+    <!-- app section = hidden until user logins in -->
+    <section id="app" hidden>
+      <!-- your existing order form + results table -->
+      <button id="logout">Logout</button>
+
+      <h2>
+          Our Fall Menu 🍂
+      </h2>
+
+      <div class="menu">
+        <div class="borderbox">
+          <h3>Drinks</h3>
+          <ul>
+            <li>☕ Latte</li>
+            <li>🍵 Tea</li>
+            <li>🧊 Iced Coffee</li>
+            <li>☕ Hot Coffee</li>
+            <li>🍫 Hot Chocolate</li>
+            <li>🥤 Frappuccino</li>
+            <li>🍓 Refresher</li>
+          </ul>
+        </div>
+        <div class="borderbox">
+          <h3>Food</h3>
+          <ul>
+            <li>🥯 Bagel</li>
+            <li>🥪 Sandwich</li>
+            <li>🍰 Cake</li>
+            <li>🥐 Pastry</li>
+          </ul>
+        </div>
+        <div class="borderbox">
+          <h2>
+            Order here:
+          </h2>
+          <!-- form to input data (post) -->
+          <form>
+            <input type="text" id="yourname" placeholder="your name">
+            <input type="text" id="yourdrink" placeholder="your drink order">
+            <input type="text" id="yourfood" placeholder="your food order">
+            <button id="submit-btn">submit</button>
+          </form>
+        </div>
       </div>
-      <div class="borderbox">
-        <h3>Food</h3>
-        <ul>
-          <li>🥯 Bagel</li>
-          <li>🥪 Sandwich</li>
-          <li>🍰 Cake</li>
-          <li>🥐 Pastry</li>
-        </ul>
+
+      <!-- add table for results -->
+      <div class="borderbox-results">
+        <h2>All Orders (results)</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Drink</th>
+                <th>Food</th>
+                <th>Created</th>
+                <th>Order Prep time (min)</th> <!-- derived field -->
+                <th>Delete</th> <!-- ability to delete items later -->
+              </tr>
+            </thead>
+            <tbody id="results-body"></tbody>
+          </table>
+      
+          <!-- to see updated table of results -->
+          <button id="show-results">Show Results (click to update)</button>
       </div>
-      <div class="borderbox">
-        <h2>
-          Order here:
-        </h2>
-        <!-- form to input data (post) -->
-        <form>
-          <input type="text" id="yourname" placeholder="your name">
-          <input type="text" id="yourdrink" placeholder="your drink order">
-          <input type="text" id="yourfood" placeholder="your food order">
-          <button id="submit-btn">submit</button>
-        </form>
-      </div>
-    </div>
+    </section>
 
-
-  <!-- add table for results -->
-  <div class="borderbox-results">
-    <h2>All Orders (results)</h2>
-      <table>
-        <thread>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Drink</th>
-            <th>Food</th>
-            <th>Created</th>
-            <th>Order Prep time (min)</th> <!-- derived field -->
-            <th>Delete</th> <!-- ability to delete items later -->
-          </tr>
-        </thread>
-        <tbody id="results-body"></tbody>
-      </table>
-  
-      <!-- to see updated table of results -->
-      <button id="show-results">Show Results (click to update)</button>
-  </div>
-
+    <!-- load javascript at end so DOM exists -->
+    <script src="js/main.js"></script>
   </body>
 </html>

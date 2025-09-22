@@ -7,6 +7,13 @@ had to install ndoe version 20
 
 to do:
 add drop down
+auto clear boxes
+get results button? (automatically updates instead) ~ makes more sense
+
+https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction
+https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/thead
+
+bcrypt
 
 npm i express express-session mongodb bcrypt dotenv
 
@@ -46,3 +53,12 @@ async function run() {
   }
 }
 run().catch(console.dir);
+
+
+CSS Framework or template:
+Material Components Web
+https://m2.material.io/develop/web
+OR
+https://getbootstrap.com/
+
+https://tailwindcss.com/ (my love)

@@ -16,11 +16,7 @@ let db;
 
 // create collections
 let Users;
-let Orders;
-
-// let nextId = 1; // will start at 1 and go up
-// let orders = [ // like appdata, save data in dictionary
-//   // { "yourname": "kyra", "yourdrink": latte, "yourfood": croissant },
+let Orders; //"yourname": "kyra", "yourdrink": latte, "yourfood": croissant 
 // ];
 
 // middleware //
@@ -45,7 +41,7 @@ app.use(
 
 
 // MongoDB connection setup
-// const { MongoClient, ServerApiVersion } = require('mongodb');
+// const { MongoClient, ServerApiVersion } = require('mongodb'); - we do it above
 const uri = `mongodb+srv://${process.env.USERNAME}:${process.env.PASSWORD}@${process.env.HOST}/?retryWrites=true&w=majority&appName=ClusterA3`;
 // const uri0 = `mongodb+srv://ss${process.env.USERNM}:${process.env.PASS}@${proce.env.HOST}/?retryWrites=true&w=majority&appName=Cluster0`;
 //console.log(uri);
@@ -114,17 +110,24 @@ function requireAuth(req, res, next) {
 app.post('/auth/login', async (req, res) => {
   const { username = '', password = '' } = req.body || {};
   const u = username.trim();
-  if (!u || !password) return res.status(400).json({ error: 'username and password required' });
 
+  // if missing username or password
+  if (!u || !password) return res.status(400).json({ error: 'username and password required' });
+  // look for user in db
   let user = await Users.findOne({ username: u });
+  
+   // if not user already = create account
   if (!user) {
+    // hash password before storing it
     const passwordHash = await bcrypt.hash(password, 10);
+    // insert hashed password into database 
     const result = await Users.insertOne({ username: u, passwordHash, createdAt: new Date() });
     req.session.userId = result.insertedId.toString();
     console.log("Created new user", u);
     return res.json({ ok: true, created: true, username: u });
   }
 
+  // if user exists, check password
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return res.status(401).json({ error: 'invalid credentials' });
 
@@ -143,28 +146,34 @@ app.post('/auth/logout', (req, res) => {
 
 // routes for express //
 // GET all orders
-app.get('/results', async (req, res) => {
-  const all = await Orders.find({}).sort({ _id: 1 }).toArray();
+app.get('/results', requireAuth, async (req, res) => {
+  const userId = new ObjectId(req.session.userId); // only show orders for this user
+  const all = await Orders.find({ userId }).sort({ createdOn: -1 }).toArray(); // order by most recent
+  // const all = await Orders.find({}).sort({ _id: 1 }).toArray();
   res.json({ data: all });
 });
 
 // POST new order
-app.post('/submit', async (req, res) => {
+app.post('/submit', requireAuth, async (req, res) => {
+  const userId = new ObjectId(req.session.userId); // associate order with this user
   const { yourname = '', yourdrink = '', yourFood = '' } = req.body || {};
   const doc = {
+    userId, // foreign key to tie order to user
     name: yourname.trim(),
     drink: yourdrink.trim(),
     food: yourFood.trim(),
-    createdOn: new Date().toISOString(),
+    createdOn: new Date(), // use Date
     readyInMin: getPrepTimeInMin(yourdrink, yourFood)
   };
   await Orders.insertOne(doc);
-  const all = await Orders.find({}).sort({ _id: 1 }).toArray();
+  // const all = await Orders.find({ userId }).sort({ _id: 1 }).toArray();
+  const all = await Orders.find({ userId }).sort({ createdOn: -1 }).toArray();
   res.json({ data: all });
 });
 
 // POST edit { id, yourname?, yourdrink?, yourFood? }
-app.post('/edit', async (req, res) => {
+app.post('/edit', requireAuth, async (req, res) => {
+  const userId = new ObjectId(req.session.userId); // only allow edits for this user
   const { id, yourname, yourdrink, yourFood } = req.body || {};
   if (!id) return res.status(400).json({ error: 'id required' });
 
@@ -180,22 +189,20 @@ app.post('/edit', async (req, res) => {
   updated.readyInMin = getPrepTimeInMin(updated.drink, updated.food);
 
   await Orders.updateOne({ _id }, { $set: updated });
-  const all = await Orders.find({}).sort({ _id: 1 }).toArray();
+  // const all = await Orders.find({ userId }).sort({ _id: 1 }).toArray();
+  const all = await Orders.find({ userId }).sort({ createdOn: -1 }).toArray();
   res.json({ data: all });
 });
 
 // POST delete { id }
 app.post('/delete', async (req, res) => {
+  const userId = new ObjectId(req.session.userId); // only allow deletes for this user
   const { id } = req.body || {};
   if (!id) return res.status(400).json({ error: 'id required' });
   await Orders.deleteOne({ _id: new ObjectId(id) });
-  const all = await Orders.find({}).sort({ _id: 1 }).toArray();
+  // const all = await Orders.find({ userId }).sort({ _id: 1 }).toArray();
+  const all = await Orders.find({ userId }).sort({ createdOn: -1 }).toArray();
   res.json({ data: all });
 });
-
-// 404 fallback for unknown routes
-// app.use((req, res) => {
-//   res.status(404).type("text").send("404 Not Found");
-// });
 
 app.listen( process.env.PORT || port )
