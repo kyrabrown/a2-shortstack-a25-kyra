@@ -1,104 +1,186 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- where metadata goes -->
-    <title>CS4241 Assignment 2</title>
-    <meta charset="utf-8">
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Handlee&family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CS4241 Assignment 2 — Cozy Coffee Shop</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Handlee&family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Pacifico&display=swap" rel="stylesheet">
+    <!-- Tailwind CDN first, then custom styles with a config to define colors-->
+    <script src="https://cdn.tailwindcss.com"></script> 
+    <script>
+      tailwind.config = { // create own custom theme and colors here
+        theme: {
+          extend: {
+            colors: {
+              coffee: {
+                900: '#45230b',
+                800: '#663624',
+              },
+              cream: '#e0cdbf',
+            },
+            fontFamily: {
+              handlee: ['Handlee', 'cursive'],
+              pacifico: ['Pacifico', 'cursive'],
+              montserrat: ['Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            },
+            borderRadius: {
+              xl: '1rem',
+              '2xl': '1.25rem',
+            },
+            boxShadow: {
+              cozy: '0 8px 24px rgba(0,0,0,0.25)'
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="/css/main.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Handlee&family=Montserrat:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet" />
 
-  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <!-- Favicon placeholder to avoid network errors in Lighthouse -->
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+  
+    <style>body{background:#663624;color:#fff}</style>
   </head>
-  <body>
-    <h1>
-      Welcome to our Coffee Shop! ☕️
-    </h1>
+  <body class="min-h-screen bg-coffee-800 text-white font-handlee">
 
-    <section id="login-section">
-    <h3>Please login to place an order!</h3>
-    <form id="login-form">
-      <input id="login-username" placeholder="username" required>
-      <input id="login-password" type="password" placeholder="password" required>
-      <button type="submit">Log in / Create account</button>
-      </form>
-      <p id="login-msg"></p>
-    </section>
-
-    <!-- app section = hidden until user logins in -->
-    <section id="app" hidden>
-      <!-- your existing order form + results table -->
-      <button id="logout">Logout</button>
-
-      <h2>
-          Our Fall Menu 🍂
-      </h2>
-
-      <div class="menu">
-        <div class="borderbox">
-          <h3>Drinks</h3>
-          <ul>
-            <li>☕ Latte</li>
-            <li>🍵 Tea</li>
-            <li>🧊 Iced Coffee</li>
-            <li>☕ Hot Coffee</li>
-            <li>🍫 Hot Chocolate</li>
-            <li>🥤 Frappuccino</li>
-            <li>🍓 Refresher</li>
+    <header class="bg-coffee-900/80 backdrop-blur supports-[backdrop-filter]:bg-coffee-900/60">
+      <div class="mx-auto max-w-5xl px-4 py-6 flex items-center justify-between">
+        <h1 class="text-3xl md:text-4xl font-pacifico tracking-wide">Welcome to our Coffee Shop! <span aria-hidden="true">☕️</span></h1>
+        <nav aria-label="Primary" class="hidden sm:block">
+          <ul class="flex gap-4 text-base font-montserrat">
           </ul>
-        </div>
-        <div class="borderbox">
-          <h3>Food</h3>
-          <ul>
-            <li>🥯 Bagel</li>
-            <li>🥪 Sandwich</li>
-            <li>🍰 Cake</li>
-            <li>🥐 Pastry</li>
-          </ul>
-        </div>
-        <div class="borderbox">
-          <h2>
-            Order here:
-          </h2>
-          <!-- form to input data (post) -->
-          <form>
-            <input type="text" id="yourname" placeholder="your name">
-            <input type="text" id="yourdrink" placeholder="your drink order">
-            <input type="text" id="yourfood" placeholder="your food order">
-            <button id="submit-btn">submit</button>
-          </form>
-        </div>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="mx-auto max-w-5xl px-4 py-8 space-y-8">
+      <!-- Login section -->
+      <section id="login-section" aria-labelledby="login-heading" class="bg-coffee-900/40 rounded-2xl shadow-cozy p-6">
+        <h2 id="login-heading" class="font-pacifico text-2xl md:text-3xl mb-4">Please log in to place an order!</h2>
+        <form id="login-form" class="grid gap-4 max-w-lg" aria-describedby="login-help">
+          <div>
+            <!-- form to input data (post) -->
+            <label for="login-username" class="block text-sm font-montserrat mb-1">Username <span class="text-cream">*</span></label>
+            <input id="login-username" name="username" type="text" required autocomplete="username" class="w-full rounded-2xl bg-white text-coffee-900 placeholder:opacity-60 px-4 py-2 shadow-sm outline-none ring-2 ring-transparent focus:ring-cream" placeholder="barista_123" />
+          </div>
+          <div>
+            <label for="login-password" class="block text-sm font-montserrat mb-1">Password <span class="text-cream">*</span></label>
+            <input id="login-password" name="password" type="password" required autocomplete="current-password" class="w-full rounded-2xl bg-white text-coffee-900 placeholder:opacity-60 px-4 py-2 shadow-sm outline-none ring-2 ring-transparent focus:ring-cream" placeholder="password1" />
+          </div>
+          <p id="login-help" class="text-sm opacity-90 font-montserrat">New here? Use the form to create an account—no separate signup needed.</p>
+          <div class="flex items-center gap-3">
+            <button type="submit" class="anim-soft inline-flex items-center justify-center rounded-2xl bg-cream text-coffee-900 font-montserrat font-semibold px-4 py-2 focus-visible:outline-none focus-visible:ring focus-visible:ring-cream/70">Log in / Create account</button>
+          </div>
+          <p id="login-msg" class="font-montserrat text-sm" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <!-- User info bar (hidden until we fetch profile) -->
+      <div id="user-info"
+          class="mb-3 text-sm border border-coffee rounded-md p-3"
+          hidden
+          aria-live="polite">
+        Signed in as <span id="user-username" class="font-semibold"></span>
+        • Account created <time id="user-created"></time>
       </div>
 
-      <!-- add table for results -->
-      <div class="borderbox-results">
-        <h2>All Orders (results)</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Drink</th>
-                <th>Food</th>
-                <th>Created</th>
-                <th>Order Prep time (min)</th> <!-- derived field -->
-                <th>Delete</th> <!-- ability to delete items later -->
-              </tr>
-            </thead>
-            <tbody id="results-body"></tbody>
-          </table>
-      
-          <!-- to see updated table of results -->
-          <button id="show-results">Show Results (click to update)</button>
-      </div>
-    </section>
+      <!-- App section (hidden until user logs in) -->
+      <section id="app" hidden aria-labelledby="menu-heading" class="space-y-6">
+        <div class="flex items-center justify-between">
+          <h2 id="menu-heading" class="font-pacifico text-2xl md:text-3xl">Our Fall Menu <span aria-hidden="true">🍂</span></h2>
+          <button id="logout" type="button" class="anim-soft inline-flex items-center justify-center rounded-2xl bg-cream text-coffee-900 font-montserrat font-semibold px-4 py-2 focus-visible:outline-none focus-visible:ring focus-visible:ring-cream/70" aria-label="Log out">Logout</button>
+        </div>
 
-    <!-- load javascript at end so DOM exists -->
-    <script src="js/main.js"></script>
+        <!-- Menu -->
+        <div id="menu" class="grid gap-6 md:grid-cols-3">
+          <section class="rounded-2xl border-4 border-dotted border-cream p-5 bg-coffee-900/30 shadow-cozy" aria-labelledby="drinks-heading">
+            <h3 id="drinks-heading" class="font-pacifico text-xl mb-2">Drinks</h3>
+            <ul class="list-outside list-disc ps-5 space-y-1">
+              <li>Latte <span aria-hidden="true">☕</span></li>  <!-- aria-hidden = allows for screen reader to ignore emojis -->
+              <li>Tea <span aria-hidden="true">🍵</span></li>
+              <li>Iced Coffee <span aria-hidden="true">🧊</span></li>
+              <li>Hot Coffee <span aria-hidden="true">☕</span></li>
+              <li>Hot Chocolate <span aria-hidden="true">🍫</span></li>
+              <li>Frappuccino <span aria-hidden="true">🥤</span></li>
+              <li>Refresher <span aria-hidden="true">🍓</span></li>
+            </ul>
+          </section>
+
+          <section class="rounded-2xl border-4 border-dotted border-cream p-5 bg-coffee-900/30 shadow-cozy" aria-labelledby="food-heading">
+            <h3 id="food-heading" class="font-pacifico text-xl mb-2">Food</h3>
+            <ul class="list-outside list-disc ps-5 space-y-1">
+              <li>Bagel <span aria-hidden="true">🥯</span></li>
+              <li>Sandwich <span aria-hidden="true">🥪</span></li>
+              <li>Cake <span aria-hidden="true">🍰</span></li>
+              <li>Pastry <span aria-hidden="true">🥐</span></li>
+            </ul>
+          </section>
+
+          <section id="order" class="rounded-2xl border-4 border-dotted border-cream p-5 bg-coffee-900/30 shadow-cozy" aria-labelledby="order-heading">
+            <h3 id="order-heading" class="font-pacifico text-xl mb-3">Order here</h3>
+            <form class="grid gap-3" aria-describedby="order-help">
+              <div>
+                <label for="yourname" class="block text-sm font-montserrat mb-1">Your name</label>
+                <input id="yourname" name="name" type="text" class="w-full rounded-2xl bg-white text-coffee-900 px-4 py-2 shadow-sm outline-none ring-2 ring-transparent focus:ring-cream" placeholder="Jim" />
+              </div>
+              <div>
+                <label for="yourdrink" class="block text-sm font-montserrat mb-1">Your drink</label>
+                <input id="yourdrink" name="drink" type="text" class="w-full rounded-2xl bg-white text-coffee-900 px-4 py-2 shadow-sm outline-none ring-2 ring-transparent focus:ring-cream" placeholder="Iced latte" />
+              </div>
+              <div>
+                <label for="yourfood" class="block text-sm font-montserrat mb-1">Your food</label>
+                <input id="yourfood" name="food" type="text" class="w-full rounded-2xl bg-white text-coffee-900 px-4 py-2 shadow-sm outline-none ring-2 ring-transparent focus:ring-cream" placeholder="Bagel" />
+              </div>
+              <p id="order-help" class="text-sm opacity-90 font-montserrat">Submit to add your order to the list.</p>
+              <div class="flex items-center gap-3">
+                <button id="submit-btn" type="submit" class="anim-soft inline-flex items-center justify-center rounded-2xl bg-cream text-coffee-900 font-montserrat font-semibold px-4 py-2 focus-visible:outline-none focus-visible:ring focus-visible:ring-cream/70">Submit order</button>
+              </div>
+            </form>
+          </section>
+        </div>
+
+        <!-- add table for results -->
+        <section id="results" class="rounded-2xl border-4 border-dotted border-cream p-5 bg-coffee-900/30 shadow-cozy" aria-labelledby="results-heading">
+          <div class="flex items-center justify-between mb-3">
+            <h3 id="results-heading" class="font-pacifico text-xl">All Orders (results)</h3>
+            <!-- <button id="show-results" type="button" class="anim-soft inline-flex items-center justify-center rounded-2xl bg-cream text-coffee-900 font-montserrat font-semibold px-4 py-2 focus-visible:outline-none focus-visible:ring focus-visible:ring-cream/70">Refresh</button> -->
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm font-montserrat border border-cream/70 rounded-xl overflow-hidden">
+              <caption class="sr-only">Table of all submitted coffee shop orders</caption>
+              <thead class="bg-coffee-900">
+                <tr>
+                  <th scope="col" class="px-3 py-2 text-left border border-cream">ID</th>
+                  <th scope="col" class="px-3 py-2 text-left border border-cream">Name</th>
+                  <th scope="col" class="px-3 py-2 text-left border border-cream">Drink</th>
+                  <th scope="col" class="px-3 py-2 text-left border border-cream">Food</th>
+                  <th scope="col" class="px-3 py-2 text-left border border-cream">Created</th>
+                  <th scope="col" class="px-3 py-2 text-left border border-cream">Order Prep time (min)</th>
+                  <th scope="col" class="px-3 py-2 text-left border border-cream">Edit / Delete</th>
+                </tr>
+              </thead>
+              <tbody id="results-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <!-- <footer class="mt-12 pb-12">
+      <div class="mx-auto max-w-5xl px-4 text-sm opacity-80 font-montserrat">
+        <p>Thank you for visitng, please come again!</p>
+      </div>
+    </footer> -->
+
+    <!-- Load JavaScript at end so DOM exists -->
+    <script src="js/main.js" defer></script>
+    <!-- <noscript><div style="background:#e0cdbf;color:#45230b;padding:0.5rem 1rem;position:fixed;bottom:0;left:0;right:0;">For full functionality, please enable JavaScript.</div></noscript> -->
   </body>
 </html>

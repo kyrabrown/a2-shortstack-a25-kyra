@@ -2,9 +2,7 @@ require('dotenv').config();
 
 const express    = require('express'),
       app        = express(),
-      dir  = "public/"
-
-const port       = 3000
+      port       = 3000
 
 const session = require("express-session");
 const bcrypt = require("bcrypt");
@@ -17,14 +15,13 @@ let db;
 // create collections
 let Users;
 let Orders; //"yourname": "kyra", "yourdrink": latte, "yourfood": croissant 
-// ];
 
 // middleware //
 app.use( express.static( 'public' ) ) // serve static files from public/
 app.use( express.static( 'views'  ) )
 app.use(express.json());
 
-app.use(
+app.use( // set up 
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -33,17 +30,8 @@ app.use(
   })
 );
 
-// Allows us to handle JSON in certain ways on the server side
-// If JSON is sent by the client, just tack it on to the request body
-// Allows us to do req.body.newdream farther down
-// Only want to use it for JSON data
-
-
-
 // MongoDB connection setup
-// const { MongoClient, ServerApiVersion } = require('mongodb'); - we do it above
 const uri = `mongodb+srv://${process.env.USERNAME}:${process.env.PASSWORD}@${process.env.HOST}/?retryWrites=true&w=majority&appName=ClusterA3`;
-// const uri0 = `mongodb+srv://ss${process.env.USERNM}:${process.env.PASS}@${proce.env.HOST}/?retryWrites=true&w=majority&appName=Cluster0`;
 //console.log(uri);
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -56,31 +44,27 @@ client = new MongoClient(uri, {
 });
 
 async function run() {
-// 
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  // Connect the client to the server	(optional starting in v4.7)
+  await client.connect();
+  // Send a ping to confirm a successful connection
+  await client.db("admin").command({ ping: 1 });
+  console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
-    const dbName = process.env.MONGO_DB || 'a3';
-    db = client.db(dbName); 
+  const dbName = process.env.MONGO_DB || 'a3';
+  db = client.db(dbName); 
 
-    Users = db.collection('users');
-    Orders = db.collection('orders');
-    await Users.createIndex({ username: 1 }, { unique: true });
-    console.log("Created orders and users collection");
-  // } finally {
-  //   // Ensures that the client will close when you finish/error
-  //   await client.close();
-  // }
+  // set up collections
+  Users = db.collection('users');
+  Orders = db.collection('orders');
+  await Users.createIndex({ username: 1 }, { unique: true });
+  console.log("Created orders and users collection");
 }
 run().catch(console.dir);
 
 // logic for derived field (prep time in minutes)
 function getPrepTimeInMin(drink, food) {
   // everything's gotta take atleast a minute
-  let mins = 1; // base case if they order something not accounted for 
+  let mins = 1; // base case if they order something not on menu or if leave one or both blank
   if (drink) {
     const d = drink.toLowerCase(); // easier to parse with all lowercase
     if (d.includes("latte") || d.includes("tea")) mins += 3;
@@ -89,7 +73,7 @@ function getPrepTimeInMin(drink, food) {
     else if (d.includes("refresher")) mins += 4;
     else if (d.includes("frap")) mins += 5;
   }
-  if (food) {
+  if (food) { 
     const f = food.toLowerCase();
     if (f.includes("sandwich")) mins += 4;
     else if (f.includes("bagel")) mins += 2;
@@ -144,26 +128,33 @@ app.post('/auth/logout', (req, res) => {
   req.session.destroy(() => res.json({ ok: true }));
 });
 
+// to show ALL user info
+app.get('/auth/profile', requireAuth, async (req, res) => {
+  const userId = new ObjectId(req.session.userId);
+  const user = await Users.findOne({ _id: userId }, { projection: { passwordHash: 0 } });
+  if (!user) return res.status(404).json({ error: 'user not found' });
+  res.json({ ok: true, user });
+});
+
 // routes for express //
 // GET all orders
 app.get('/results', requireAuth, async (req, res) => {
   const userId = new ObjectId(req.session.userId); // only show orders for this user
   const all = await Orders.find({ userId }).sort({ createdOn: -1 }).toArray(); // order by most recent
-  // const all = await Orders.find({}).sort({ _id: 1 }).toArray();
   res.json({ data: all });
 });
 
 // POST new order
 app.post('/submit', requireAuth, async (req, res) => {
   const userId = new ObjectId(req.session.userId); // associate order with this user
-  const { yourname = '', yourdrink = '', yourFood = '' } = req.body || {};
+  const { yourname = '', yourdrink = '', yourfood = '' } = req.body || {};
   const doc = {
     userId, // foreign key to tie order to user
     name: yourname.trim(),
     drink: yourdrink.trim(),
-    food: yourFood.trim(),
+    food: yourfood.trim(),
     createdOn: new Date(), // use Date
-    readyInMin: getPrepTimeInMin(yourdrink, yourFood)
+    readyInMin: getPrepTimeInMin(yourdrink, yourfood)
   };
   await Orders.insertOne(doc);
   // const all = await Orders.find({ userId }).sort({ _id: 1 }).toArray();
@@ -171,10 +162,10 @@ app.post('/submit', requireAuth, async (req, res) => {
   res.json({ data: all });
 });
 
-// POST edit { id, yourname?, yourdrink?, yourFood? }
+// POST edit { id, yourname?, yourdrink?, yourfood? }
 app.post('/edit', requireAuth, async (req, res) => {
   const userId = new ObjectId(req.session.userId); // only allow edits for this user
-  const { id, yourname, yourdrink, yourFood } = req.body || {};
+  const { id, yourname, yourdrink, yourfood } = req.body || {};
   if (!id) return res.status(400).json({ error: 'id required' });
 
   const _id = new ObjectId(id);
@@ -184,7 +175,7 @@ app.post('/edit', requireAuth, async (req, res) => {
   const updated = {
     name:  typeof yourname  === 'string' ? yourname.trim()  : existing.name,
     drink: typeof yourdrink === 'string' ? yourdrink.trim() : existing.drink,
-    food:  typeof yourFood  === 'string' ? yourFood.trim()  : existing.food
+    food:  typeof yourfood  === 'string' ? yourfood.trim()  : existing.food
   };
   updated.readyInMin = getPrepTimeInMin(updated.drink, updated.food);
 

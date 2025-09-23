@@ -59,7 +59,7 @@ const submit = async (event) => {
   const payload = {
     yourname:  nameInput?.value || "",
     yourdrink: drinkInput?.value || "",
-    yourFood:  foodInput?.value || "", // capital F matches server
+    yourfood:  foodInput?.value || "", // capital F matches server
   };
 
   const res = await fetch("/submit", {
@@ -136,7 +136,7 @@ async function onResultsTableClick(e) {
         id,
         yourname:  newName,
         yourdrink: newDrink,
-        yourFood:  newFood,
+        yourfood:  newFood,
       }),
     });
 
@@ -156,10 +156,36 @@ async function checkAuth() {
   if (authed) await getResults();
 }
 
+// added to show ALL user info in the top bar
+async function loadProfile() {
+  try {
+    const res = await fetch('/auth/profile');
+    if (!res.ok) throw new Error('not authenticated');
+    const { user } = await res.json();
+
+    const nameEl = document.getElementById('user-username');
+    const createdEl = document.getElementById('user-created');
+    const barEl = document.getElementById('user-info');
+
+    if (nameEl)   nameEl.textContent = user.username || '(unknown)';
+    if (createdEl) {
+      const d = user.createdAt ? new Date(user.createdAt) : null;
+      createdEl.textContent = d ? d.toLocaleString() : '(n/a)';
+      if (d) createdEl.setAttribute('datetime', d.toISOString());
+    }
+
+    if (barEl) barEl.hidden = false;
+  } catch { 
+    // If not logged in, keep it hidden
+    const barEl = document.getElementById('user-info');
+    if (barEl) barEl.hidden = true;
+  }
+}
+
 // ---- wire everything AFTER DOM is ready ----
 window.addEventListener("DOMContentLoaded", () => {
   byId("submit-btn")   ?.addEventListener("click", submit);
-  byId("show-results") ?.addEventListener("click", getResults);
+  // byId("show-results") ?.addEventListener("click", getResults);
   byId("results-body") ?.addEventListener("click", onResultsTableClick);
 
   byId("login-form")?.addEventListener("submit", async (e) => {
@@ -183,12 +209,16 @@ window.addEventListener("DOMContentLoaded", () => {
       data.error || (data.created ? "Account created!" : "Logged in!"));
 
     await checkAuth();
+    await loadProfile();
   });
 
   byId("logout")?.addEventListener("click", async () => {
     await fetch("/auth/logout", { method: "POST", credentials: "same-origin" });
     await checkAuth();
+    await loadProfile();
   });
 
   checkAuth();
+  loadProfile();
 });
+
