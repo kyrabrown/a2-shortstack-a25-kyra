@@ -167,3 +167,5 @@ Originally there was a results button to update the table of orders, now the tab
 Saved information to connect to database (endpoint) like password and host in a `.env` file for better security
 
 Used cookie based session using express-session.  After a successful login, the server puts the user’s _id into the session, and the browser gets an HTTP-only cookie that identifies that session on future requests. Any “protected” route checks the session (the requireAuth middleware). If it finds req.session.userId, the request is allowed; otherwise it returns 401.  On login, verify with bcrypt.compare(password, user.passwordHash).  Then, on success, set req.session.userId = ..
+
+Add logical flow of webpage where login page and nothing else (hide app page), then once user authenticated, then show app portion of the webpage.
