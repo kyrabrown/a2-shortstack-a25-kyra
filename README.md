@@ -128,7 +128,7 @@ Achieved at least 90% on the `Performance`, `Best Practices`, `Accessibility`, a
 
 
 ## AI Usage
-I used Chat GPT to explain concepts used in this assignment.  It came up with some good ideas to optimize my code such as encrypting the passowrds.  It also helped me utilize tailwind and walked me through the steps to replace my main.css with the CMD tailwind and implementing that right into my indes.html.  Here, I learned how to make custom color pallets with a tailwind config, all inside my html file.  This front end UI part was the main area I used ChatGPT for in this assignment.
+I used Chat GPT to explain concepts used in this assignment.  It came up with some good ideas to optimize my code such as encrypting the passowrds.  It also helped me utilize tailwind and walked me through the steps to replace my main.css with the CDN tailwind and implementing that right into my indes.html.  Here, I learned how to make custom color pallets with a tailwind config, all inside my html file.  This front end UI part was the main area I used ChatGPT for in this assignment.  Also helped me improved accesibility by offering ideas like aria-hidden="true" for screen reader.
 
 ---
 
