@@ -4,7 +4,7 @@
   "description": "",
   "author": "",
   "scripts": {
-    "start": "node --env-file=.env server.improved.js"
+    "start": "node server.improved.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

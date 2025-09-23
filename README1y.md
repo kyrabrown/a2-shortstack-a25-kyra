@@ -67,7 +67,13 @@ Routes:
 - Kept the existing derived field: readyInMin computed server-side (getPrepTimeInMin) from drink/food—nice example of server logic beyond CRUD
 
 - **General**  
-Achieved at least 90% on the `Performance`, `Best Practices`, `Accessibility`, and `SEO` tests using Google [Lighthouse](https://developers.google.com/web/tools/lighthouse)
+Achieved at least 90% on the `Performance`, `Best Practices`, `Accessibility`, and `SEO` tests using Google [Lighthouse](https://pagespeed.web.dev/analysis/https-a2-kyrabrown-onrender-com/ptyk7sgfoi?form_factor=desktop)
+
+![title](Images/lighthouse.png)
+- Performance = 99%
+- Best Practices = 96%
+- Accesibility = 100%
+- SEO = 90%
 
 ## Deliverables
 ### 1. Converted server to Express
@@ -106,19 +112,19 @@ Achieved at least 90% on the `Performance`, `Best Practices`, `Accessibility`, a
 - CSS handled via **TailwindCSS CDN**.  
 - Colors/fonts chosen for a cozy coffee shop theme.  
 - Accessibility:
-  - Semantic HTML tags (`header`, `main`, `section`, `footer`).  
-  - Labeled inputs with `for`/`id`.  
-  - Skip link for keyboard users.  
-  - Color contrast and focus-visible states.  
-  - `aria-live` for login messages.
+  - Semantic HTML tags (`header`, `main`, `section`, `footer`) 
+  - Labeled inputs with `for`/`id` 
+  - Skip link for keyboard users
+  - Color contrast and focus-visible states
+  - `aria-live` for login messages
 
 ### 6. Deployment to Render
-- Deployed to Render with proper environment variables (`SESSION_SECRET`, `USERNAME`, `PASSWORD`, `HOST`, `MONGO_DB`).  
-- Verified that the site loads and login/order features work.  
-- Example URL: `https://a3-FirstnameLastname.onrender.com`
+- Deployed to Render with proper environment variables saved in Render with gitignore.  
+- Verified that the site loads and login/order features work  
+- url: https://a2-kyrabrown.onrender.com/
 
 ### 7. Naming scheme
-- Repo and pull request both follow the scheme: `a3-FirstnameLastname`.
+- Repo and pull request both follow the scheme: `a3-KyraBrown`.
 
 
 ## AI Usage
